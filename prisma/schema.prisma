@@ -1,0 +1,122 @@
+// Prisma schema for attendance system
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  SUPERADMIN
+  COMPANY_ADMIN
+  USER
+}
+
+enum EventType {
+  IN
+  OUT
+}
+
+// Models
+
+model Company {
+  id        Int       @id @default(autoincrement())
+  name      String
+  slug      String    @unique
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  users     User[]
+  employees Employee[]
+  cameras   Camera[]
+  events    Event[]
+
+  @@map("companies")
+}
+
+model User {
+  id           Int       @id @default(autoincrement())
+  email        String    @unique
+  passwordHash String
+  role         UserRole
+  companyId    Int?
+  company      Company?  @relation(fields: [companyId], references: [id])
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  lastLoginAt  DateTime?
+
+  @@index([companyId])
+  @@index([email])
+  @@map("users")
+}
+
+model Employee {
+  id            Int       @id @default(autoincrement())
+  companyId     Int
+  company       Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name          String
+  roleTitle     String?
+  photoFilename String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  events        Event[]
+
+  @@index([companyId])
+  @@map("employees")
+}
+
+model Camera {
+  id                  Int       @id @default(autoincrement())
+  companyId           Int
+  company             Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name                String
+  location            String?
+  ip                  String
+  rtspPort            Int       @default(554)
+  username            String
+  passwordEnc         String    // Encrypted password
+  rtspPath            String    @default("/ISAPI/Streaming/Channels/101")
+  isActive            Boolean   @default(true)
+  recognitionEnabled  Boolean   @default(true)
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  events              Event[]
+
+  @@index([companyId])
+  @@index([isActive])
+  @@map("cameras")
+}
+
+model Event {
+  id         Int       @id @default(autoincrement())
+  companyId  Int
+  company    Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  employeeId Int
+  employee   Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  cameraId   Int?
+  camera     Camera?   @relation(fields: [cameraId], references: [id], onDelete: SetNull)
+  type       EventType
+  timestamp  DateTime
+  createdAt  DateTime  @default(now())
+
+  @@index([companyId])
+  @@index([employeeId])
+  @@index([cameraId])
+  @@index([timestamp(sort: Desc)])
+  @@index([companyId, timestamp(sort: Desc)])
+  @@map("events")
+}
+
+
+
+
+
+
+
