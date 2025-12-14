@@ -36,6 +36,9 @@ export const config = {
 
   // Recognition service defaults
   publicEmployeesCompanySlug: process.env.PUBLIC_COMPANY_SLUG || null,
+
+  // Presence reset token (for recognition_service reset hook)
+  presenceResetToken: process.env.PRESENCE_RESET_TOKEN || '',
   
   // Rate limiting
   rateLimitWindowMs: 60 * 1000, // 1 minute
